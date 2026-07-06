@@ -1,7 +1,11 @@
 import dotenv from "dotenv";
 import yargs from "yargs";
 
-dotenv.config();
+// Extract --env-file before yargs parses (needed for dotenv to load first)
+const envFileArg = process.argv.find((arg) => arg.startsWith("--env-file="));
+const envFile = envFileArg ? envFileArg.split("=")[1] : ".env";
+
+dotenv.config({ path: envFile });
 
 const argv = yargs(process.argv.slice(2))
   .option("environmentId", {

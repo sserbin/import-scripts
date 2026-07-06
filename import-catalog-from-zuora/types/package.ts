@@ -7,6 +7,7 @@ export const packageFields = `
         refId
         status
         productId
+        billingId
         additionalMetaData
         draftSummary {
           version
@@ -101,6 +102,7 @@ export type Package = {
   status?: string;
   type: "Plan" | "Addon";
   productId: string;
+  billingId?: string | null;
   additionalMetaData?: Record<string, string>;
   draftSummary?: {
     version: number;

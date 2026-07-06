@@ -15,7 +15,11 @@
     "zuora-import:publish:update": "tsx ./import-catalog-from-zuora/main.ts --publish --update",
     "zuora-import:update:publish:dry-run": "tsx ./import-catalog-from-zuora/main.ts --publish --update --dry-run",
     "zuora-import:publish:update:dry-run": "tsx ./import-catalog-from-zuora/main.ts --publish --update --dry-run",
-    "zuora-import:fork": "tsx ./import-catalog-from-zuora/fork.ts"
+    "zuora-import:fork": "tsx ./import-catalog-from-zuora/fork.ts",
+    "grandfather-test": "tsx ./import-catalog-from-zuora/grandfather-test.ts",
+    "grandfather-test:dry-run": "tsx ./import-catalog-from-zuora/grandfather-test.ts --dryRun",
+    "link-plan-to-zuora": "tsx ./import-catalog-from-zuora/link-plan-to-zuora.ts",
+    "link-plan-to-zuora:dry-run": "tsx ./import-catalog-from-zuora/link-plan-to-zuora.ts --dryRun"
   },
   "keywords": [],
   "author": "",
@@ -32,5 +36,6 @@
   "dependencies": {
     "dotenv": "^17.2.3",
     "yargs": "^18.0.0"
-  }
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }

@@ -171,3 +171,40 @@ You can fork the copy and re-import again — suffixes increment automatically:
 - `Pro_Plan` (grandfathered) → `Pro_Plan-copy-1`
 - `Pro_Plan-copy-1` (grandfathered) → `Pro_Plan-copy-2`
 - `Pro_Plan-copy-2` (not grandfathered) → updated in place
+
+---
+
+## Linking an Existing Plan to an Existing Zuora Rate Plan
+
+For plans created directly in the Stigg UI that should reuse Zuora billing artifacts already owned by another plan — e.g. a monthly-reset sibling of an annual-reset plan, or a grandfathering cohort split. This only wires up the Zuora linkage (`billingId` + prices); it does not create the plan, copy entitlements, or touch Zuora.
+
+### Step 1: Create the plan in Stigg UI
+
+- Correct product, display name, description, refId
+- Set `additionalMetaData.ZUORA__SYNC_SKIP_UPDATE: "true"` at create time, before publish — this stops Stigg's Zuora sync from mutating the shared rate plan/prices
+- Configure entitlements
+- Keep as **DRAFT**
+
+### Step 2: Look up the Zuora IDs
+
+In Zuora UI, find the Zuora Product ID and the Rate Plan ID(s) for the billing periods this plan should reuse (e.g. one for monthly, one for annual).
+
+### Step 3: Run the CLI
+
+```bash
+npm run link-plan-to-zuora:dry-run -- \
+  --env-file=.env \
+  --stiggPlanRefId=<stigg-plan-refId> \
+  --zuoraProductId=<zuora-product-id> \
+  --zuoraRatePlanId=<zuora-rate-plan-id> \
+  [--zuoraRatePlanId=<another-rate-plan-id-for-a-different-billing-period>]
+```
+
+- Amount, currency, and billing model are looked up from Zuora automatically — you only need the Zuora IDs, not the price details
+- Warns (doesn't fail) if `ZUORA__SYNC_SKIP_UPDATE` isn't set on the plan; pass `--force` to proceed anyway
+- Fails if the plan already has a different `billingId` set — won't silently overwrite an existing linkage
+- Drop `:dry-run` (or add `--publish`) to actually write, once the dry-run payload looks right
+
+### Step 4: Verify and publish
+
+Check Zuora UI that the shared rate plan/prices weren't modified, then publish the plan (via UI or `--publish` on the CLI).

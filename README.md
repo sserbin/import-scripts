@@ -205,6 +205,12 @@ npm run link-plan-to-zuora:dry-run -- \
 - Fails if the plan already has a different `billingId` set — won't silently overwrite an existing linkage
 - Drop `:dry-run` (or add `--publish`) to actually write, once the dry-run payload looks right
 
+The Zuora linkage lives at three levels: the Stigg plan's `billingId` points at the Zuora **Product**, each price model's `priceGroupPackageBillingId` at a Zuora **Rate Plan**, and each price's `billingId` at a Zuora **Rate Plan Charge**. The rate-plan link therefore rides on the price, so linking always goes through `setPackagePricing`.
+
+**`setPackagePricing` replaces the plan's entire pricing.** It sets exactly the one charge per rate plan derived from Zuora and drops everything else. On a plan with a single charge that's what you want.
+
+This breaks **custom plans that use the per-entitlement charge workaround** — where the plan carries one extra $0 per-unit charge per custom entitlement (e.g. `feature-api-requests`, `feature-data-connections`) alongside the real base charge, purely to express those entitlements in Stigg. Linking such a plan keeps only the derived base charge and drops all the per-entitlement charges (and can drop the entitlements with them). The dry-run prints `WARNING: Plan ... already has N price(s) that differ ... will replace them` — if you see it on one of these plans, either rebuild the per-entitlement charges by hand afterward, or set the linkage in the UI instead.
+
 ### Step 4: Verify and publish
 
-Check Zuora UI that the shared rate plan/prices weren't modified, then publish the plan (via UI or `--publish` on the CLI).
+Check Zuora UI that the shared rate plan/prices weren't modified. For a multi-charge plan, also confirm in Stigg that the other charges and their entitlements are intact (rebuild any that were replaced). Then publish the plan (via UI or `--publish` on the CLI).

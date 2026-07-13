@@ -11,7 +11,6 @@ import {
   SearchPlansResponse,
 } from "../types";
 import { sendGraphQLRequest } from "./request";
-import { isDryRun } from "../arguments";
 
 type PackageResponse<T extends PackageType> = T extends "Plan"
   ? SearchPlansResponse
@@ -50,9 +49,6 @@ export async function queryPackage<T extends PackageType>(
   const body = JSON.stringify({ query, variables });
   const response = await sendGraphQLRequest<PackageResponse<T>>(body);
   if (response.errors) {
-    if (isDryRun) {
-      return null;
-    }
     throw new Error(
       `Error fetching ${type} with refId: ${refId}, productId: ${productId}. Errors: ${JSON.stringify(
         response.errors
@@ -179,9 +175,6 @@ export async function queryPackageByRefId<T extends PackageType>(
   const response = await sendGraphQLRequest<GetPackageByRefIdResponse>(body);
 
   if (response.errors) {
-    if (isDryRun) {
-      return null;
-    }
     throw new Error(
       `Error fetching ${type} by refId: ${refId}. Errors: ${JSON.stringify(response.errors)}`
     );

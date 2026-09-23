@@ -18,8 +18,8 @@
     "zuora-import:fork": "tsx ./import-catalog-from-zuora/fork.ts",
     "grandfather-test": "tsx ./import-catalog-from-zuora/grandfather-test.ts",
     "grandfather-test:dry-run": "tsx ./import-catalog-from-zuora/grandfather-test.ts --dryRun",
-    "link-plan-to-zuora": "tsx ./import-catalog-from-zuora/link-plan-to-zuora.ts",
-    "link-plan-to-zuora:dry-run": "tsx ./import-catalog-from-zuora/link-plan-to-zuora.ts --dryRun"
+    "link-to-zuora": "tsx ./import-catalog-from-zuora/link-to-zuora.ts",
+    "link-to-zuora:dry-run": "tsx ./import-catalog-from-zuora/link-to-zuora.ts --dryRun"
   },
   "keywords": [],
   "author": "",

@@ -140,6 +140,7 @@ export type PublishResponse = {
       __typename: string;
     };
   };
+  errors?: unknown;
 };
 
 export type DraftResponse = {

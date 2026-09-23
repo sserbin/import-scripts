@@ -174,11 +174,11 @@ You can fork the copy and re-import again — suffixes increment automatically:
 
 ---
 
-## Linking an Existing Plan to an Existing Zuora Rate Plan
+## Linking an Existing Plan or Addon to an Existing Zuora Rate Plan
 
-For plans created directly in the Stigg UI that should reuse Zuora billing artifacts already owned by another plan — e.g. a monthly-reset sibling of an annual-reset plan, or a grandfathering cohort split. This only wires up the Zuora linkage (`billingId` + prices); it does not create the plan, copy entitlements, or touch Zuora.
+For plans or addons created directly in the Stigg UI that should reuse Zuora billing artifacts already owned by another package — e.g. a monthly-reset sibling of an annual-reset plan, or a grandfathering cohort split. Also for fixing a package that points at the wrong Zuora rate plan. This only wires up the Zuora linkage (`billingId` + prices); it does not create the package, copy entitlements, or touch Zuora.
 
-### Step 1: Create the plan in Stigg UI
+### Step 1: Create the plan or addon in Stigg UI
 
 - Correct product, display name, description, refId
 - Set `additionalMetaData.ZUORA__SYNC_SKIP_UPDATE: "true"` at create time, before publish — this stops Stigg's Zuora sync from mutating the shared rate plan/prices
@@ -187,12 +187,12 @@ For plans created directly in the Stigg UI that should reuse Zuora billing artif
 
 ### Step 2: Look up the Zuora IDs
 
-In Zuora UI, find the Zuora Product ID and the Rate Plan ID(s) for the billing periods this plan should reuse (e.g. one for monthly, one for annual).
+In Zuora UI, find the Zuora Product ID and the Rate Plan ID(s) for the billing periods this package should reuse (e.g. one for monthly, one for annual).
 
 ### Step 3: Run the CLI
 
 ```bash
-npm run link-plan-to-zuora:dry-run -- \
+npm run link-to-zuora:dry-run -- \
   --env-file=.env \
   --stiggPlanRefId=<stigg-plan-refId> \
   --zuoraProductId=<zuora-product-id> \
@@ -200,17 +200,22 @@ npm run link-plan-to-zuora:dry-run -- \
   [--zuoraRatePlanId=<another-rate-plan-id-for-a-different-billing-period>]
 ```
 
+Use `--stiggAddonRefId=<stigg-addon-refId>` instead of `--stiggPlanRefId` for an addon.
+
 - Amount, currency, and billing model are looked up from Zuora automatically — you only need the Zuora IDs, not the price details
-- Warns (doesn't fail) if `ZUORA__SYNC_SKIP_UPDATE` isn't set on the plan; pass `--force` to proceed anyway
-- Fails if the plan already has a different `billingId` set — won't silently overwrite an existing linkage
-- Drop `:dry-run` (or add `--publish`) to actually write, once the dry-run payload looks right
+- Fails if `ZUORA__SYNC_SKIP_UPDATE` isn't set on the package; pass `--force` to proceed anyway
+- Fails if the package already has a different `billingId` (Zuora product) set; pass `--relink` to replace it
+- Warns if a requested Zuora rate plan is inactive
+- Writes go to the package's draft, creating one from the published version if needed. Use `npm run link-to-zuora` (no `:dry-run`) to write, and add `--publish` to also publish the draft
 
-The Zuora linkage lives at three levels: the Stigg plan's `billingId` points at the Zuora **Product**, each price model's `priceGroupPackageBillingId` at a Zuora **Rate Plan**, and each price's `billingId` at a Zuora **Rate Plan Charge**. The rate-plan link therefore rides on the price, so linking always goes through `setPackagePricing`.
+The Zuora linkage lives at three levels: the Stigg package's `billingId` points at the Zuora **Product**, each price model's `priceGroupPackageBillingId` at a Zuora **Rate Plan**, and each price's `billingId` at a Zuora **Rate Plan Charge**. The rate-plan link therefore rides on the price, so linking always goes through `setPackagePricing`.
 
-**`setPackagePricing` replaces the plan's entire pricing.** It sets exactly the one charge per rate plan derived from Zuora and drops everything else. On a plan with a single charge that's what you want.
+**`setPackagePricing` replaces the package's entire pricing.** It sets exactly the one charge per rate plan derived from Zuora and drops everything else. Pass every rate plan the package should keep — relinking only the monthly one drops the annual price. On a package with a single charge per billing period that's what you want.
 
 This breaks **custom plans that use the per-entitlement charge workaround** — where the plan carries one extra $0 per-unit charge per custom entitlement (e.g. `feature-api-requests`, `feature-data-connections`) alongside the real base charge, purely to express those entitlements in Stigg. Linking such a plan keeps only the derived base charge and drops all the per-entitlement charges (and can drop the entitlements with them). The dry-run prints `WARNING: Plan ... already has N price(s) that differ ... will replace them` — if you see it on one of these plans, either rebuild the per-entitlement charges by hand afterward, or set the linkage in the UI instead.
 
 ### Step 4: Verify and publish
 
-Check Zuora UI that the shared rate plan/prices weren't modified. For a multi-charge plan, also confirm in Stigg that the other charges and their entitlements are intact (rebuild any that were replaced). Then publish the plan (via UI or `--publish` on the CLI).
+Check Zuora UI that the shared rate plan/prices weren't modified. For a multi-charge plan, also confirm in Stigg that the other charges and their entitlements are intact (rebuild any that were replaced). Then publish the package (via UI or `--publish` on the CLI).
+
+Publishing uses `migrationType: NEW_CUSTOMERS`, so when relinking an already-published package, existing subscriptions stay on the previous version and its old Zuora charges.
